@@ -38,7 +38,7 @@ uses
   CastleInternalNodesUnsupported,
   CastleVectors,
   CastleComponentSerialize,
-  Generics.Collections, StrUtils, CastleLog, CastleScene, X3DLoad, X3DNodes;
+  Generics.Collections, StrUtils, CastleLog, X3DLoad, X3DNodes;
 
 type
   ProtoDictionary = {$ifdef FPC}specialize{$endif} TDictionary<String, TJSONObject>;
@@ -81,10 +81,9 @@ type
     
   public
     class var localJSON: TX3DJSONLD;
-    class var Scene: TCastleScene;
     constructor Create;
     destructor Destroy; override;
-    procedure RegisterJSON(AScene: TCastleScene);
+    procedure RegisterJSON();
     function LoadJsonIntoDocument(jsobj: TJSONObject; const version: String; x3dTidyFlag: Boolean): TDOMDocument;
     function ReadJsonFile(const filename: String): TJSONObject;
     function GetX3DVersion(jsobj: TJSONObject): String;
@@ -1339,11 +1338,10 @@ begin
   end;
 end;
 
-procedure TX3DJSONLD.RegisterJSON(AScene: TCastleScene);
+procedure TX3DJSONLD.RegisterJSON();
 var
   ModelFormat: TModelFormat;
 begin
-  Scene := AScene;
   ModelFormat := TModelFormat.Create;
   ModelFormat.OnLoad := {$ifdef FPC}@{$endif} LoadX3DJsonInternal;
   ModelFormat.MimeTypes.Add('model/x3d+json');
