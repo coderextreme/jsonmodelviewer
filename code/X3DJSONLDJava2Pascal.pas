@@ -34,7 +34,7 @@ interface
 
 uses
   Classes, SysUtils, DOM, XMLRead, XMLWrite, fpjson, jsonparser, 
-  CastleImages,
+  CastleImages, CastleUriUtils,
   CastleInternalNodesUnsupported,
   CastleVectors,
   CastleComponentSerialize,
@@ -1348,6 +1348,7 @@ begin
   ModelFormat.FileFilterName := 'X3D JSON (*.x3dj)';
   ModelFormat.Extensions.Add('.x3dj');
   RegisterModelFormat(ModelFormat);
+  UriMimeExtensions['.x3dj'] := 'model/x3d+json';
 end;
 
 end.
