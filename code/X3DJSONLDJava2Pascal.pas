@@ -37,6 +37,7 @@ uses
   CastleImages, CastleUriUtils,
   CastleInternalNodesUnsupported,
   CastleVectors,
+  CastleScene,
   CastleComponentSerialize,
   Generics.Collections, StrUtils, CastleLog, X3DLoad, X3DNodes;
 
@@ -81,9 +82,10 @@ type
     
   public
     class var localJSON: TX3DJSONLD;
+    class var SceneMain: TCastleScene;
     constructor Create;
     destructor Destroy; override;
-    procedure RegisterJSON();
+    procedure RegisterJSON(AScene: TCastleScene);
     function LoadJsonIntoDocument(jsobj: TJSONObject; const version: String; x3dTidyFlag: Boolean): TDOMDocument;
     function ReadJsonFile(const filename: String): TJSONObject;
     function GetX3DVersion(jsobj: TJSONObject): String;
@@ -97,11 +99,12 @@ begin
   inherited Create;
   x3dTidy := False;
   localJSON := Self;
+  SceneMain := nil;
   protos := ProtoDictionary.Create;
   builtins := TStringList.Create;
   builtins.Sorted := True;
   builtins.Duplicates := dupIgnore;
-  { InitializeBuiltins; }
+  InitializeBuiltins;
 end;
 
 destructor TX3DJSONLD.Destroy;
@@ -544,285 +547,285 @@ begin
   builtins.Add('MFVec4d');
   builtins.Add('SFVec4f');
   builtins.Add('MFVec4f');
-  NodesManager.RegisterNodeClasses([
-  { TAcousticPropertiesNode, }
-  { TAnalyserNode, }
-  TAppearanceNode,
-  TArc2DNode,
-  TArcClose2DNode,
-  TAudioClipNode,
-  { TAudioDestinationNode, }
-  TBackgroundNode,
-  TBallJointNode,
-  TBillboardNode,
-  { TBiquadFilterNode, }
-  { TBlendedVolumeStyleNode, }
-  TBooleanFilterNode,
-  TBooleanSequencerNode,
-  TBooleanToggleNode,
-  TBooleanTriggerNode,
-  { TBoundaryEnhancementVolumeStyleNode, }
-  TBoundedPhysicsModelNode,
-  TBoxNode,
-  { TBufferAudioSourceNode, }
-  TCADAssemblyNode,
-  TCADFaceNode,
-  TCADLayerNode,
-  TCADPartNode,
-  { TCartoonVolumeStyleNode, }
-  { TChannelMergerNode, }
-  { TChannelSelectorNode, }
-  { TChannelSplitterNode, }
-  TCircle2DNode,
-  TClipPlaneNode,
-  TCollidableOffsetNode,
-  TCollidableShapeNode,
-  TCollisionNode,
-  TCollisionCollectionNode,
-  TCollisionSensorNode,
-  TCollisionSpaceNode,
-  TColorNode,
-  { TColorChaserNode, }
-  TColorDamperNode,
-  TColorInterpolatorNode,
-  TColorRGBANode,
-  TComposedCubeMapTextureNode,
-  TComposedShaderNode,
-  TComposedTexture3DNode,
-  { TComposedVolumeStyleNode, }
-  TConeNode,
-  TConeEmitterNode,
-  TContactNode,
-  TContour2DNode,
-  TContourPolyline2DNode,
-  { TConvolverNode, }
-  TCoordinateNode,
-  { TCoordinateChaserNode, }
-  TCoordinateDamperNode,
-  TCoordinateDoubleNode,
-  TCoordinateInterpolatorNode,
-  TCoordinateInterpolator2DNode,
-  TCylinderNode,
-  TCylinderSensorNode,
-  { TDelayNode, }
-  TDirectionalLightNode,
-  TDISEntityManagerNode,
-  TDISEntityTypeMappingNode,
-  TDisk2DNode,
-  TDoubleAxisHingeJointNode,
-  { TDynamicsCompressorNode, }
-  TEaseInEaseOutNode,
-  { TEdgeEnhancementVolumeStyleNode, }
-  TElevationGridNode,
-  TEspduTransformNode,
-  TExplosionEmitterNode,
-  TExtrusionNode,
-  TFillPropertiesNode,
-  TFloatVertexAttributeNode,
-  TFogNode,
-  TFogCoordinateNode,
-  TFontStyleNode,
-  TForcePhysicsModelNode,
-  { TGainNode, }
-  TGeneratedCubeMapTextureNode,
-  TGeoCoordinateNode,
-  TGeoElevationGridNode,
-  TGeoLocationNode,
-  TGeoLODNode,
-  TGeoMetadataNode,
-  TGeoOriginNode,
-  TGeoPositionInterpolatorNode,
-  TGeoProximitySensorNode,
-  TGeoTouchSensorNode,
-  TGeoTransformNode,
-  TGeoViewpointNode,
-  TGroupNode,
-  THAnimDisplacerNode,
-  THAnimHumanoidNode,
-  THAnimJointNode,
-  THAnimMotionNode,
-  THAnimSegmentNode,
-  THAnimSiteNode,
-  TImageCubeMapTextureNode,
-  TImageTextureNode,
-  TImageTexture3DNode,
-  TIndexedFaceSetNode,
-  TIndexedLineSetNode,
-  TIndexedQuadSetNode,
-  TIndexedTriangleFanSetNode,
-  TIndexedTriangleSetNode,
-  TIndexedTriangleStripSetNode,
-  TInlineNode,
-  TIntegerSequencerNode,
-  TIntegerTriggerNode,
-  { TIsoSurfaceVolumeDataNode, }
-  TKeySensorNode,
-  TLayerNode,
-  TLayerSetNode,
-  TLayoutNode,
-  TLayoutGroupNode,
-  TLayoutLayerNode,
-  TLinePickSensorNode,
-  TLinePropertiesNode,
-  TLineSetNode,
-  { TListenerPointSourceNode, }
-  TLoadSensorNode,
-  TLocalFogNode,
-  TLODNode,
-  TMaterialNode,
-  TMatrix3VertexAttributeNode,
-  TMatrix4VertexAttributeNode,
-  TMetadataBooleanNode,
-  TMetadataDoubleNode,
-  TMetadataFloatNode,
-  TMetadataIntegerNode,
-  TMetadataSetNode,
-  TMetadataStringNode,
-  { TMicrophoneSourceNode, }
-  TMotorJointNode,
-  TMovieTextureNode,
-  TMultiTextureNode,
-  TMultiTextureCoordinateNode,
-  TMultiTextureTransformNode,
-  TNavigationInfoNode,
-  TNormalNode,
-  TNormalInterpolatorNode,
-  TNurbsCurveNode,
-  TNurbsCurve2DNode,
-  TNurbsOrientationInterpolatorNode,
-  TNurbsPatchSurfaceNode,
-  TNurbsPositionInterpolatorNode,
-  TNurbsSetNode,
-  TNurbsSurfaceInterpolatorNode,
-  TNurbsSweptSurfaceNode,
-  TNurbsSwungSurfaceNode,
-  TNurbsTextureCoordinateNode,
-  TNurbsTrimmedSurfaceNode,
-  { TOpacityMapVolumeStyleNode, }
-  TOrientationChaserNode,
-  TOrientationDamperNode,
-  TOrientationInterpolatorNode,
-  TOrthoViewpointNode,
-  { TOscillatorSourceNode, }
-  TPackagedShaderNode,
-  TParticleSystemNode,
-  { TPeriodicWaveNode, }
-  TPhysicalMaterialNode,
-  TPickableGroupNode,
-  TPixelTextureNode,
-  TPixelTexture3DNode,
-  TPlaneSensorNode,
-  TPointEmitterNode,
-  TPointLightNode,
-  TPointPickSensorNode,
-  { TPointPropertiesNode, }
-  TPointSetNode,
-  TPolyline2DNode,
-  TPolylineEmitterNode,
-  TPolypoint2DNode,
-  TPositionChaserNode,
-  TPositionChaser2DNode,
-  TPositionDamperNode,
-  TPositionDamper2DNode,
-  TPositionInterpolatorNode,
-  TPositionInterpolator2DNode,
-  TPrimitivePickSensorNode,
-  TProgramShaderNode,
-  { TProjectionVolumeStyleNode, }
-  TGroupNode, { TODO fix }
-  TProximitySensorNode,
-  TQuadSetNode,
-  TReceiverPduNode,
-  TRectangle2DNode,
-  TRigidBodyNode,
-  TRigidBodyCollectionNode,
-  TScalarChaserNode,
-  { TScalarDamperNode, }
-  TScalarInterpolatorNode,
-  TScreenFontStyleNode,
-  TScreenGroupNode,
-  TScriptNode,
-  { TSegmentedVolumeDataNode, }
-  { TShadedVolumeStyleNode, }
-  TShaderPartNode,
-  TShaderProgramNode,
-  TShapeNode,
-  TSignalPduNode,
-  { TSilhouetteEnhancementVolumeStyleNode, }
-  TSingleAxisHingeJointNode,
-  TSliderJointNode,
-  TSoundNode,
-  { TSpatialSoundNode, }
-  TSphereNode,
-  TSphereSensorNode,
-  TSplinePositionInterpolatorNode,
-  TSplinePositionInterpolator2DNode,
-  TSplineScalarInterpolatorNode,
-  TSpotLightNode,
-  TSquadOrientationInterpolatorNode,
-  TStaticGroupNode,
-  { TStreamAudioDestinationNode, }
-  { TStreamAudioSourceNode, }
-  TStringSensorNode,
-  TSurfaceEmitterNode,
-  TSwitchNode,
-  { TTexCoordChaser2DNode, }
-  { TTexCoordDamper2DNode, }
-  TTextNode,
-  TTextureBackgroundNode,
-  TTextureCoordinateNode,
-  TTextureCoordinate3DNode,
-  TTextureCoordinate4DNode,
-  TTextureCoordinateGeneratorNode,
-  TTextureProjectorNode,
-  TTextureProjectorParallelNode,
-  TTexturePropertiesNode,
-  TTextureTransformNode,
-  TTextureTransform3DNode,
-  TTextureTransformMatrix3DNode,
-  TTimeSensorNode,
-  TTimeTriggerNode,
-  { TToneMappedVolumeStyleNode, }
-  TTouchSensorNode,
-  TTransformNode,
-  TTransformSensorNode,
-  TTransmitterPduNode,
-  TTriangleFanSetNode,
-  TTriangleSetNode,
-  TTriangleSet2DNode,
-  TTriangleStripSetNode,
-  TTwoSidedMaterialNode,
-  TUniversalJointNode,
-  TUnlitMaterialNode,
-  TViewpointNode,
-  TViewpointGroupNode,
-  TViewportNode,
-  TVisibilitySensorNode,
-  { TVolumeDataNode, }
-  TVolumeEmitterNode,
-  TVolumePickSensorNode,
-  { TWaveShaperNode, }
-  TWindPhysicsModelNode,
-  TWorldInfoNode,
-  TEnvironmentLightNode,
-  TTangentNode,
-  { TImageTextureAtlasNode, }
-  { TAnisotropyMaterialExtensionNode, }
-  { TClearcoatMaterialExtensionNode, }
-  { TDepthModeNode, }
-  { TDispersionMaterialExtensionNode, }
-  { TEmissiveStrengthMaterialExtensionNode, }
-  { TIORMaterialExtensionNode, }
-  { TInstancedShapeNode, }
-  { TIridescenceMaterialExtensionNode, }
-  { TSheenMaterialExtensionNode, }
-  { TSpecularGlossinessMaterialNode, }
-  { TSpecularMaterialExtensionNode, }
-  { TTransmissionMaterialExtensionNode, }
-  { TVolumeMaterialExtensionNode, }
-  { TDiffuseTransmissionMaterialExtensionNode, }
-  TBlendModeNode
- ]);
+//  NodesManager.RegisterNodeClasses([
+//  { TAcousticPropertiesNode, }
+//  { TAnalyserNode, }
+//  TAppearanceNode,
+//  TArc2DNode,
+//  TArcClose2DNode,
+//  TAudioClipNode,
+//  { TAudioDestinationNode, }
+//  TBackgroundNode,
+//  TBallJointNode,
+//  TBillboardNode,
+//  { TBiquadFilterNode, }
+//  { TBlendedVolumeStyleNode, }
+//  TBooleanFilterNode,
+//  TBooleanSequencerNode,
+//  TBooleanToggleNode,
+//  TBooleanTriggerNode,
+//  { TBoundaryEnhancementVolumeStyleNode, }
+//  TBoundedPhysicsModelNode,
+//  TBoxNode,
+//  { TBufferAudioSourceNode, }
+//  TCADAssemblyNode,
+//  TCADFaceNode,
+//  TCADLayerNode,
+//  TCADPartNode,
+//  { TCartoonVolumeStyleNode, }
+//  { TChannelMergerNode, }
+//  { TChannelSelectorNode, }
+//  { TChannelSplitterNode, }
+//  TCircle2DNode,
+//  TClipPlaneNode,
+//  TCollidableOffsetNode,
+//  TCollidableShapeNode,
+//  TCollisionNode,
+//  TCollisionCollectionNode,
+//  TCollisionSensorNode,
+//  TCollisionSpaceNode,
+//  TColorNode,
+//  { TColorChaserNode, }
+//  TColorDamperNode,
+//  TColorInterpolatorNode,
+//  TColorRGBANode,
+//  TComposedCubeMapTextureNode,
+//  TComposedShaderNode,
+//  TComposedTexture3DNode,
+//  { TComposedVolumeStyleNode, }
+//  TConeNode,
+//  TConeEmitterNode,
+//  TContactNode,
+//  TContour2DNode,
+//  TContourPolyline2DNode,
+//  { TConvolverNode, }
+//  TCoordinateNode,
+//  { TCoordinateChaserNode, }
+//  TCoordinateDamperNode,
+//  TCoordinateDoubleNode,
+//  TCoordinateInterpolatorNode,
+//  TCoordinateInterpolator2DNode,
+//  TCylinderNode,
+//  TCylinderSensorNode,
+//  { TDelayNode, }
+//  TDirectionalLightNode,
+//  TDISEntityManagerNode,
+//  TDISEntityTypeMappingNode,
+//  TDisk2DNode,
+//  TDoubleAxisHingeJointNode,
+//  { TDynamicsCompressorNode, }
+//  TEaseInEaseOutNode,
+//  { TEdgeEnhancementVolumeStyleNode, }
+//  TElevationGridNode,
+//  TEspduTransformNode,
+//  TExplosionEmitterNode,
+//  TExtrusionNode,
+//  TFillPropertiesNode,
+//  TFloatVertexAttributeNode,
+//  TFogNode,
+//  TFogCoordinateNode,
+//  TFontStyleNode,
+//  TForcePhysicsModelNode,
+//  { TGainNode, }
+//  TGeneratedCubeMapTextureNode,
+//  TGeoCoordinateNode,
+//  TGeoElevationGridNode,
+//  TGeoLocationNode,
+//  TGeoLODNode,
+//  TGeoMetadataNode,
+//  TGeoOriginNode,
+//  TGeoPositionInterpolatorNode,
+//  TGeoProximitySensorNode,
+//  TGeoTouchSensorNode,
+//  TGeoTransformNode,
+//  TGeoViewpointNode,
+//  TGroupNode,
+//  THAnimDisplacerNode,
+//  THAnimHumanoidNode,
+//  THAnimJointNode,
+//  THAnimMotionNode,
+//  THAnimSegmentNode,
+//  THAnimSiteNode,
+//  TImageCubeMapTextureNode,
+//  TImageTextureNode,
+//  TImageTexture3DNode,
+//  TIndexedFaceSetNode,
+//  TIndexedLineSetNode,
+//  TIndexedQuadSetNode,
+//  TIndexedTriangleFanSetNode,
+//  TIndexedTriangleSetNode,
+//  TIndexedTriangleStripSetNode,
+//  TInlineNode,
+//  TIntegerSequencerNode,
+//  TIntegerTriggerNode,
+//  { TIsoSurfaceVolumeDataNode, }
+//  TKeySensorNode,
+//  TLayerNode,
+//  TLayerSetNode,
+//  TLayoutNode,
+//  TLayoutGroupNode,
+//  TLayoutLayerNode,
+//  TLinePickSensorNode,
+//  TLinePropertiesNode,
+//  TLineSetNode,
+//  { TListenerPointSourceNode, }
+//  TLoadSensorNode,
+//  TLocalFogNode,
+//  TLODNode,
+//  TMaterialNode,
+//  TMatrix3VertexAttributeNode,
+//  TMatrix4VertexAttributeNode,
+//  TMetadataBooleanNode,
+//  TMetadataDoubleNode,
+//  TMetadataFloatNode,
+//  TMetadataIntegerNode,
+//  TMetadataSetNode,
+//  TMetadataStringNode,
+//  { TMicrophoneSourceNode, }
+//  TMotorJointNode,
+//  TMovieTextureNode,
+//  TMultiTextureNode,
+//  TMultiTextureCoordinateNode,
+//  TMultiTextureTransformNode,
+//  TNavigationInfoNode,
+//  TNormalNode,
+//  TNormalInterpolatorNode,
+//  TNurbsCurveNode,
+//  TNurbsCurve2DNode,
+//  TNurbsOrientationInterpolatorNode,
+//  TNurbsPatchSurfaceNode,
+//  TNurbsPositionInterpolatorNode,
+//  TNurbsSetNode,
+//  TNurbsSurfaceInterpolatorNode,
+//  TNurbsSweptSurfaceNode,
+//  TNurbsSwungSurfaceNode,
+//  TNurbsTextureCoordinateNode,
+//  TNurbsTrimmedSurfaceNode,
+//  { TOpacityMapVolumeStyleNode, }
+//  TOrientationChaserNode,
+//  TOrientationDamperNode,
+//  TOrientationInterpolatorNode,
+//  TOrthoViewpointNode,
+//  { TOscillatorSourceNode, }
+//  TPackagedShaderNode,
+//  TParticleSystemNode,
+//  { TPeriodicWaveNode, }
+//  TPhysicalMaterialNode,
+//  TPickableGroupNode,
+//  TPixelTextureNode,
+//  TPixelTexture3DNode,
+//  TPlaneSensorNode,
+//  TPointEmitterNode,
+//  TPointLightNode,
+//  TPointPickSensorNode,
+//  { TPointPropertiesNode, }
+//  TPointSetNode,
+//  TPolyline2DNode,
+//  TPolylineEmitterNode,
+//  TPolypoint2DNode,
+//  TPositionChaserNode,
+//  TPositionChaser2DNode,
+//  TPositionDamperNode,
+//  TPositionDamper2DNode,
+//  TPositionInterpolatorNode,
+//  TPositionInterpolator2DNode,
+//  TPrimitivePickSensorNode,
+//  TProgramShaderNode,
+//  { TProjectionVolumeStyleNode, }
+//  TGroupNode, { TODO fix }
+//  TProximitySensorNode,
+//  TQuadSetNode,
+//  TReceiverPduNode,
+//  TRectangle2DNode,
+//  TRigidBodyNode,
+//  TRigidBodyCollectionNode,
+//  TScalarChaserNode,
+//  { TScalarDamperNode, }
+//  TScalarInterpolatorNode,
+//  TScreenFontStyleNode,
+//  TScreenGroupNode,
+//  TScriptNode,
+//  { TSegmentedVolumeDataNode, }
+//  { TShadedVolumeStyleNode, }
+//  TShaderPartNode,
+//  TShaderProgramNode,
+//  TShapeNode,
+//  TSignalPduNode,
+//  { TSilhouetteEnhancementVolumeStyleNode, }
+//  TSingleAxisHingeJointNode,
+//  TSliderJointNode,
+//  TSoundNode,
+//  { TSpatialSoundNode, }
+//  TSphereNode,
+//  TSphereSensorNode,
+//  TSplinePositionInterpolatorNode,
+//  TSplinePositionInterpolator2DNode,
+//  TSplineScalarInterpolatorNode,
+//  TSpotLightNode,
+//  TSquadOrientationInterpolatorNode,
+//  TStaticGroupNode,
+//  { TStreamAudioDestinationNode, }
+//  { TStreamAudioSourceNode, }
+//  TStringSensorNode,
+//  TSurfaceEmitterNode,
+//  TSwitchNode,
+//  { TTexCoordChaser2DNode, }
+//  { TTexCoordDamper2DNode, }
+//  TTextNode,
+//  TTextureBackgroundNode,
+//  TTextureCoordinateNode,
+//  TTextureCoordinate3DNode,
+//  TTextureCoordinate4DNode,
+//  TTextureCoordinateGeneratorNode,
+//  TTextureProjectorNode,
+//  TTextureProjectorParallelNode,
+//  TTexturePropertiesNode,
+//  TTextureTransformNode,
+//  TTextureTransform3DNode,
+//  TTextureTransformMatrix3DNode,
+//  TTimeSensorNode,
+//  TTimeTriggerNode,
+//  { TToneMappedVolumeStyleNode, }
+//  TTouchSensorNode,
+//  TTransformNode,
+//  TTransformSensorNode,
+//  TTransmitterPduNode,
+//  TTriangleFanSetNode,
+//  TTriangleSetNode,
+//  TTriangleSet2DNode,
+//  TTriangleStripSetNode,
+//  TTwoSidedMaterialNode,
+//  TUniversalJointNode,
+//  TUnlitMaterialNode,
+//  TViewpointNode,
+//  TViewpointGroupNode,
+//  TViewportNode,
+//  TVisibilitySensorNode,
+//  { TVolumeDataNode, }
+//  TVolumeEmitterNode,
+//  TVolumePickSensorNode,
+//  { TWaveShaperNode, }
+//  TWindPhysicsModelNode,
+//  TWorldInfoNode,
+//  TEnvironmentLightNode,
+//  TTangentNode,
+//  { TImageTextureAtlasNode, }
+//  { TAnisotropyMaterialExtensionNode, }
+//  { TClearcoatMaterialExtensionNode, }
+//  { TDepthModeNode, }
+//  { TDispersionMaterialExtensionNode, }
+//  { TEmissiveStrengthMaterialExtensionNode, }
+//  { TIORMaterialExtensionNode, }
+//  { TInstancedShapeNode, }
+//  { TIridescenceMaterialExtensionNode, }
+//  { TSheenMaterialExtensionNode, }
+//  { TSpecularGlossinessMaterialNode, }
+//  { TSpecularMaterialExtensionNode, }
+//  { TTransmissionMaterialExtensionNode, }
+//  { TVolumeMaterialExtensionNode, }
+//  { TDiffuseTransmissionMaterialExtensionNode, }
+//  TBlendModeNode
+// ]);
 end;
 
 procedure TX3DJSONLD.ElementSetAttribute(element: TDOMElement; const key: String; 
@@ -924,13 +927,15 @@ begin
       end;
     end;
   end;
-  
+  CastleLog.WritelnLog('Key is '+key);
   if protos.TryGetValue(key, new_object) then begin
     new_key := 'ProtoInstance';
     child := document.CreateElement(new_key);
     child.SetAttribute('name', key);
-  end else begin
+  end else if (document <> nil) then begin
     child := document.CreateElement(key);
+  end else begin
+    CastleLog.WritelnLog('Couldn''t find Document root');
   end;
   
   if (containerField <> '') and (
@@ -1087,18 +1092,13 @@ var
   jsonValue: TJSONData;
   comment: TDOMComment;
   tempContainerField: String;
+  tempInt: LongInt;
 begin
   tempContainerField := '';
   key := '';
   if not Assigned(obj) then Exit;
   
-  // Check if parentkey is numeric
-  try
-    StrToInt(parentkey);
-    kii := True;
-  except
-    kii := False;
-  end;
+  kii := TryStrToInt(parentkey, tempInt);
   
   if kii or (Length(parentkey) > 0) and (parentkey[1] = '-') then
     child := element
@@ -1336,12 +1336,14 @@ begin
     XmlStream.Free;
     jsobj.Free;
   end;
+  Result := TX3DJSONLD.SceneMain.RootNode;
 end;
 
-procedure TX3DJSONLD.RegisterJSON();
+procedure TX3DJSONLD.RegisterJSON(AScene: TCastleScene);
 var
   ModelFormat: TModelFormat;
 begin
+  SceneMain := AScene;
   ModelFormat := TModelFormat.Create;
   ModelFormat.OnLoad := {$ifdef FPC}@{$endif} LoadX3DJsonInternal;
   ModelFormat.MimeTypes.Add('model/x3d+json');
