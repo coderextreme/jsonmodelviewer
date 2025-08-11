@@ -51,7 +51,7 @@ type
     protos: ProtoDictionary;
     builtins: TStringList;
     
-    function StripQuotes(const value: String): String;
+    function StripQuotes(value: String): String;
     procedure InitializeBuiltins;
     function CommentStringToXML(const str: String): String;
     function NavigationInfoTypeToXML(const str: String): String;
@@ -112,12 +112,19 @@ begin
   inherited Destroy;
 end;
 
-function TX3DJSONLD.StripQuotes(const value: String): String;
+function TX3DJSONLD.StripQuotes(value: String): String;
 begin
-  if (Length(value) >= 2) and (value[1] = '"') and (value[Length(value)] = '"') then
-    Result := Copy(value, 2, Length(value) - 2)
-  else
+	{
+  // CastleLog.WriteLnLog('stripping '+value);
+  if (Length(value) >= 2) and (value[1] = '"') and (value[Length(value)] = '"') then begin
+    Result := Copy(value, 2, Length(value) - 2);
+    // CastleLog.WriteLnLog('stripped1 '+Result);
+  end else begin }
     Result := value;
+    {
+    // CastleLog.WriteLnLog('stripped2 '+Result);
+  end;
+  }
 end;
 
 procedure TX3DJSONLD.InitializeBuiltins;
@@ -867,13 +874,19 @@ begin
     element.AppendChild(fieldValue);
   end
   else if key = 'SON schema' then
-    // JSON Schema - ignore
+    // JSON Schema, - ignore
   else if key = 'ncoding' then
     // encoding, UTF-8 - ignore
+  else if key = 'xsd:noNamespaceSchemaLocation' then
+    // schema, - ignore
+  else if key = 'xmlns:xsd' then
+    // schema, - ignore
   else if value = '' then
     element.SetAttribute(key, '')
-  else
+  else begin
+    // CastleLog.WriteLnLog('setting field'+key+' to '+value);
     element.SetAttribute(key, StripQuotes(value));
+  end;
 end;
 
 function TX3DJSONLD.CreateElement(document: TDOMDocument; const key: String; 
@@ -925,7 +938,7 @@ begin
       end;
     end;
   end;
-  CastleLog.WritelnLog('Key is '+key);
+  // CastleLog.WritelnLog('Key is '+key);
   if protos.TryGetValue(key, new_object) then begin
     new_key := 'ProtoInstance';
     child := document.CreateElement(new_key);
@@ -961,7 +974,7 @@ begin
     (((containerField = 'normal') or (containerField = 'skinBindingNormals') or (containerField = 'skinNormal')) and (key = 'Normal')) or
     (((containerField = 'skeleton') or (containerField = 'children') or (containerField = 'joints')) and (key = 'HAnimJoint'))
   ) then begin
-	  {child.SetAttribute('containerField', containerField); }
+	  child.SetAttribute('containerField', containerField);
   end;
   
   Result := child;
@@ -1006,10 +1019,9 @@ begin
   if not Assigned(obj) then Exit;
   
   jsonValue := obj.Find(key);
-  if not Assigned(jsonValue) then Exit;
+  if (jsonValue = nil) then Exit;
   
-  if jsonValue is TJSONObject then
-  begin
+  if jsonValue is TJSONObject then begin
     if key = '@sourceCode' then
       CDATACreateFunction(document, element, TJSONArray(jsonValue))
     else if (Length(key) > 0) and (key[1] = '@') then
@@ -1040,9 +1052,11 @@ begin
     begin
       arr := TJSONArray(jsonValue);
       ConvertJsonArray(document, arr, key, element, containerField);
-    end
-    else
+    end else  begin
       ConvertJsonValue(document, jsonValue, key, element, containerField);
+    end;
+  end else begin
+ // TODO  else if key = '#comment' then
   end;
 end;
 
@@ -1145,6 +1159,9 @@ begin
           NavigationInfoTypeToXML(jsonValue.AsString), document)
       else
         ElementSetAttribute(child, Copy(key, 2, Length(key)-1), jsonValue.AsString, document);
+    end else if (jsonValue is TJSONBoolean) then begin
+      CastleLog.WriteLnLog('setting field'+key+' to '+jsonValue.AsString);
+      ElementSetAttribute(child, Copy(key, 2, Length(key)-1), UpperCase(jsonValue.AsString), document);
     end else if (jsonValue is TJSONBoolean) or (jsonValue is TJSONNull) then begin
       ElementSetAttribute(child, Copy(key, 2, Length(key)-1), jsonValue.AsString, document);
     end;
@@ -1170,12 +1187,13 @@ begin
   try
     arraysize := arr.Count;
     
-    if parentkey = 'meta' then
+    if parentkey = 'meta' then begin
       if x3dTidy then begin
         arraysize := arr.Count - 2;
       end else begin
         arraysize := arr.Count - 3;
       end;
+    end;
     
     for i := 0 to arraysize - 1 do
     begin
@@ -1185,7 +1203,7 @@ begin
         localArray.Add(jsonValue.AsString)
       else if jsonValue is TJSONString then
       begin
-        localArray.Add(jsonValue.AsString);
+        localArray.Add('"'+jsonValue.AsString+'"');
         arrayOfStrings := True;
       end
       else if (jsonValue is TJSONBoolean) or (jsonValue is TJSONNull) then
@@ -1330,6 +1348,7 @@ begin
       XmlStream.Position := 0; // Reset stream position
       { Result := TX3DRootNode.Create }
       Result := LoadNode(XmlStream, '', 'model/x3d+xml');
+      SaveNode(Result, 'sampleOutputFromModelViewer.x3d');
     end;
   finally
     XmlStream.Free;
