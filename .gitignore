@@ -40,3 +40,5 @@ AndroidSigningProperties.txt
 
 # May contain settings specific to your user / machine
 CastleProjectLocalSettings.json
+# for xmldiff.js
+node_modules
