@@ -57,26 +57,26 @@ type
     function FixXML(const str: String; const version: String): String;
     
     procedure ElementSetAttribute(element: TDOMElement; const key: String; 
-      const values: TStringList; document: TDOMDocument); overload;
+      const values: TStringList; document: TXMLDocument); overload;
     procedure ElementSetAttribute(element: TDOMElement; const key: String; 
-      const value: String; document: TDOMDocument); overload;
+      const value: String; document: TXMLDocument); overload;
     
-    function CreateElement(document: TDOMDocument; const key: String; 
+    function CreateElement(document: TXMLDocument; const key: String; 
       const containerField: String; obj: TJSONObject): TDOMElement;
     
-    procedure CDATACreateFunction(document: TDOMDocument; element: TDOMElement; 
+    procedure CDATACreateFunction(document: TXMLDocument; element: TDOMElement; 
       const value: TJSONArray);
     
-    procedure ConvertProperty(document: TDOMDocument; const key: String; 
+    procedure ConvertProperty(document: TXMLDocument; const key: String; 
       obj: TJSONObject; element: TDOMElement; const containerField: String);
     
-    procedure ConvertJsonObject(document: TDOMDocument; obj: TJSONObject; 
+    procedure ConvertJsonObject(document: TXMLDocument; obj: TJSONObject; 
       const parentkey: String; element: TDOMElement; const containerField: String);
     
-    procedure ConvertJsonArray(document: TDOMDocument; arr: TJSONArray; 
+    procedure ConvertJsonArray(document: TXMLDocument; arr: TJSONArray; 
       const parentkey: String; element: TDOMElement; const containerField: String);
     
-    function ConvertJsonValue(document: TDOMDocument; value: TJSONData; 
+    function ConvertJsonValue(document: TXMLDocument; value: TJSONData; 
       const parentkey: String; element: TDOMElement; const containerField: String): TDOMElement;
     
   public
@@ -84,10 +84,10 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure RegisterJSON;
-    function LoadJsonIntoDocument(jsobj: TJSONObject; const version: String; x3dTidyFlag: Boolean): TDOMDocument;
+    function LoadJsonIntoDocument(jsobj: TJSONObject; const version: String; x3dTidyFlag: Boolean): TXMLDocument;
     function ReadJsonFile(const filename: String): TJSONObject;
     function GetX3DVersion(jsobj: TJSONObject): String;
-    function SerializeDOM(const x3dVersion: String; document: TDOMDocument): String;
+    function SerializeDOM(const x3dVersion: String; document: TXMLDocument): String;
   end;
 
 implementation
@@ -833,7 +833,7 @@ begin
 end;
 
 procedure TX3DJSONLD.ElementSetAttribute(element: TDOMElement; const key: String; 
-  const values: TStringList; document: TDOMDocument);
+  const values: TStringList; document: TXMLDocument);
 var
   sb: String;
   i: Integer;
@@ -861,7 +861,7 @@ begin
 end;
 
 procedure TX3DJSONLD.ElementSetAttribute(element: TDOMElement; const key: String; 
-  const value: String; document: TDOMDocument);
+  const value: String; document: TXMLDocument);
 var
   fieldValue: TDOMElement;
 begin
@@ -888,7 +888,7 @@ begin
   end;
 end;
 
-function TX3DJSONLD.CreateElement(document: TDOMDocument; const key: String; 
+function TX3DJSONLD.CreateElement(document: TXMLDocument; const key: String; 
   const containerField: String; obj: TJSONObject): TDOMElement;
 var
   new_object: TJSONObject;
@@ -980,7 +980,7 @@ begin
   Result := child;
 end;
 
-procedure TX3DJSONLD.CDATACreateFunction(document: TDOMDocument; element: TDOMElement; 
+procedure TX3DJSONLD.CDATACreateFunction(document: TXMLDocument; element: TDOMElement; 
   const value: TJSONArray);
 var
   sb: String;
@@ -1005,10 +1005,11 @@ begin
   end;
   
   cdata := document.CreateCDATASection(sb);
+  // cdata.SetNodeValue(sb);
   element.AppendChild(cdata);
 end;
 
-procedure TX3DJSONLD.ConvertProperty(document: TDOMDocument; const key: String; 
+procedure TX3DJSONLD.ConvertProperty(document: TXMLDocument; const key: String; 
   obj: TJSONObject; element: TDOMElement; const containerField: String);
 var
   jsonValue: TJSONData;
@@ -1094,7 +1095,7 @@ begin
   // Additional XML fixes could be added here if needed
 end;
 
-procedure TX3DJSONLD.ConvertJsonObject(document: TDOMDocument; obj: TJSONObject; 
+procedure TX3DJSONLD.ConvertJsonObject(document: TXMLDocument; obj: TJSONObject; 
   const parentkey: String; element: TDOMElement; const containerField: String);
 var
   kii: Boolean;
@@ -1170,7 +1171,7 @@ begin
     element.AppendChild(child);
 end;
 
-procedure TX3DJSONLD.ConvertJsonArray(document: TDOMDocument; arr: TJSONArray; 
+procedure TX3DJSONLD.ConvertJsonArray(document: TXMLDocument; arr: TJSONArray; 
   const parentkey: String; element: TDOMElement; const containerField: String);
 var
   arrayOfStrings: Boolean;
@@ -1237,7 +1238,7 @@ begin
   end;
 end;
 
-function TX3DJSONLD.ConvertJsonValue(document: TDOMDocument; value: TJSONData; 
+function TX3DJSONLD.ConvertJsonValue(document: TXMLDocument; value: TJSONData; 
   const parentkey: String; element: TDOMElement; const containerField: String): TDOMElement;
 var
   comment: TDOMComment;
@@ -1251,7 +1252,7 @@ begin
 end;
 
 function TX3DJSONLD.LoadJsonIntoDocument(jsobj: TJSONObject; const version: String; 
-  x3dTidyFlag: Boolean): TDOMDocument;
+  x3dTidyFlag: Boolean): TXMLDocument;
 var
   unenversion: String;
   element: TDOMElement;
@@ -1261,10 +1262,10 @@ begin
   x3dTidy := x3dTidyFlag;
   unenversion := StringReplace(StringReplace(version, '%22', '', [rfReplaceAll]), '"', '', [rfReplaceAll]);
   
-  Result := TDOMDocument.Create;
+  Result := TXMLDocument.Create;
   
   element := Self.CreateElement(Result, 'X3D', '', nil);
-  ElementSetAttribute(element, 'xmlns:xsd', 'http://www.w3.org/2001/XMLSchema-instance', Result);
+  ElementSetAttribute(element, 'xmlns:xsd', 'https://www.w3.org/2001/XMLSchema-instance', Result);
   
   x3dObj := TJSONObject(jsobj.Find('X3D'));
   if Assigned(x3dObj) then
@@ -1312,7 +1313,7 @@ begin
   end;
 end;
 
-function TX3DJSONLD.SerializeDOM(const x3dVersion: String; document: TDOMDocument): String;
+function TX3DJSONLD.SerializeDOM(const x3dVersion: String; document: TXMLDocument): String;
 var
   stringStream: TStringStream;
 begin
@@ -1328,7 +1329,7 @@ end;
 function LoadX3DJsonInternal(const Stream: TStream; const BaseUrl: String): TX3DRootNode; overload;
 var
     jsobj: TJSONData;
-    document: TDOMDocument;
+    document: TXMLDocument;
     XmlStream: TMemoryStream;
     XmlString: String;
 begin
@@ -1351,7 +1352,7 @@ begin
     end;
   finally
     XmlStream.Free;
-    jsobj.Free;
+    // jsobj.Free;
   end;
 end;
 
