@@ -74,7 +74,7 @@ begin
     using our Load method. }
     { Load('castle-data:/knight/knight.gltf'); }
   loader := TX3DJSONLD.Create;
-  loader.RegisterJSON(SceneMain);
+  loader.RegisterJSON;
   SceneMain.Load('castle-data:/rubik/rubikPly.x3dj');
   SaveNode(SceneMain.RootNode, 'outputFromX3d_with_optional_j.x3d');
 

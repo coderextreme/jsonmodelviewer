@@ -82,10 +82,9 @@ type
     
   public
     class var localJSON: TX3DJSONLD;
-    class var SceneMain: TCastleScene;
     constructor Create;
     destructor Destroy; override;
-    procedure RegisterJSON(AScene: TCastleScene);
+    procedure RegisterJSON;
     function LoadJsonIntoDocument(jsobj: TJSONObject; const version: String; x3dTidyFlag: Boolean): TDOMDocument;
     function ReadJsonFile(const filename: String): TJSONObject;
     function GetX3DVersion(jsobj: TJSONObject): String;
@@ -99,7 +98,6 @@ begin
   inherited Create;
   x3dTidy := False;
   localJSON := Self;
-  SceneMain := nil;
   protos := ProtoDictionary.Create;
   builtins := TStringList.Create;
   builtins.Sorted := True;
@@ -1330,20 +1328,19 @@ begin
       SetLength(XmlString, XmlStream.Size);
       XmlStream.Read(XmlString[1], XmlStream.Size);
       XmlStream.Position := 0; // Reset stream position
-      { Result := LoadNode(XmlStream, '', 'model/x3d+xml'); }
+      { Result := TX3DRootNode.Create }
+      Result := LoadNode(XmlStream, '', 'model/x3d+xml');
     end;
   finally
     XmlStream.Free;
     jsobj.Free;
   end;
-  Result := TX3DJSONLD.SceneMain.RootNode;
 end;
 
-procedure TX3DJSONLD.RegisterJSON(AScene: TCastleScene);
+procedure TX3DJSONLD.RegisterJSON;
 var
   ModelFormat: TModelFormat;
 begin
-  SceneMain := AScene;
   ModelFormat := TModelFormat.Create;
   ModelFormat.OnLoad := {$ifdef FPC}@{$endif} LoadX3DJsonInternal;
   ModelFormat.MimeTypes.Add('model/x3d+json');
