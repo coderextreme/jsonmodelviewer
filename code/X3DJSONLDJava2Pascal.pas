@@ -964,6 +964,7 @@ begin
     ((containerField = 'geometry') and (key = 'GeoElevationGrid')) or
     ((containerField = 'shape') and (key = 'Shape')) or
     ((containerField = 'skin') and (key = 'Shape')) or
+    ((containerField = 'skin') and (key = 'Transform')) or
     (EndsText('exture', containerField) and (key = 'ImageTexture')) or
     (key = 'HAnimSegment') or
     (key = 'HAnimSite') or
@@ -1160,9 +1161,8 @@ begin
       else
         ElementSetAttribute(child, Copy(key, 2, Length(key)-1), jsonValue.AsString, document);
     end else if (jsonValue is TJSONBoolean) then begin
-      CastleLog.WriteLnLog('setting field'+key+' to '+jsonValue.AsString);
       ElementSetAttribute(child, Copy(key, 2, Length(key)-1), UpperCase(jsonValue.AsString), document);
-    end else if (jsonValue is TJSONBoolean) or (jsonValue is TJSONNull) then begin
+    end else if (jsonValue is TJSONNull) then begin
       ElementSetAttribute(child, Copy(key, 2, Length(key)-1), jsonValue.AsString, document);
     end;
   end;
@@ -1207,7 +1207,7 @@ begin
         arrayOfStrings := True;
       end
       else if (jsonValue is TJSONBoolean) or (jsonValue is TJSONNull) then
-        localArray.Add(jsonValue.AsString)
+        localArray.Add(UpperCase(jsonValue.AsString))
       else if jsonValue is TJSONObject then
       begin
         try
