@@ -37,7 +37,6 @@ uses
   CastleImages, CastleUriUtils,
   CastleInternalNodesUnsupported,
   CastleVectors,
-  CastleScene,
   CastleComponentSerialize,
   Generics.Collections, StrUtils, CastleLog, X3DLoad, X3DNodes;
 
