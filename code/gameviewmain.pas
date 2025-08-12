@@ -11,6 +11,7 @@ uses Classes,
   CastleVectors, CastleComponentSerialize, CastleUIControls,
   CastleControls, CastleKeysMouse, CastleViewport, CastleScene,
   X3DJSONLDJava2Pascal;
+  // X3DJSONLDX3DNode;
 
 type
   { Main view, where most of the application logic takes place. }
