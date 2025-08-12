@@ -1199,17 +1199,14 @@ begin
     begin
       jsonValue := arr.Items[i];
       
-      if jsonValue is TJSONNumber then
+      if jsonValue is TJSONNumber then begin
         localArray.Add(jsonValue.AsString)
-      else if jsonValue is TJSONString then
-      begin
+      end else if jsonValue is TJSONString then begin
         localArray.Add('"'+jsonValue.AsString+'"');
         arrayOfStrings := True;
-      end
-      else if (jsonValue is TJSONBoolean) or (jsonValue is TJSONNull) then
-        localArray.Add(UpperCase(jsonValue.AsString))
-      else if jsonValue is TJSONObject then
-      begin
+      end else if (jsonValue is TJSONBoolean) then begin
+        localArray.Add(UpperCase(jsonValue.AsString));
+      end else if jsonValue is TJSONObject then begin
         try
           StrToInt(IntToStr(i));
           kii := True;
@@ -1217,13 +1214,16 @@ begin
           kii := False;
         end;
         
-        if not ((Length(parentkey) > 0) and (parentkey[1] = '-')) and kii then
+        if not ((Length(parentkey) > 0) and (parentkey[1] = '-')) and kii then begin
           ConvertJsonValue(document, jsonValue, parentkey, element, containerField)
-        else
+        end else begin
           ConvertJsonValue(document, jsonValue, IntToStr(i), element, Copy(parentkey, 2, Length(parentkey)-1));
-      end
-      else if jsonValue is TJSONArray then
+	end;
+      end else if jsonValue is TJSONArray then begin
         ConvertJsonValue(document, jsonValue, IntToStr(i), element, containerField);
+      end else if (jsonValue = nil) or (jsonValue is TJSONNull) then begin
+        localArray.Add('');
+      end;
     end;
     
     if parentkey = '@sourceCode' then
