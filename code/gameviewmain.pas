@@ -10,8 +10,10 @@ interface
 uses Classes,
   CastleVectors, CastleComponentSerialize, CastleUIControls,
   CastleControls, CastleKeysMouse, CastleViewport, CastleScene,
-  X3DJSONLDJava2Pascal;
-  // X3DJSONLDX3DNode;
+  { PICK ONE OF THE FOLLOWING }
+  // X3DJSONLDJava2Pascal;  { THIS WORKS }
+  // X3DJSONLDX3DNode; { THIS FAILS }
+  X3DJSONLD3; { TODO UNDER CONSTRUCTION }
 
 type
   { Main view, where most of the application logic takes place. }
@@ -74,7 +76,7 @@ begin
     load it again, to always initialize all UI (e.g. LabelLoadedUrl.Caption)
     using our Load method. }
     { Load('castle-data:/knight/knight.gltf'); }
-  loader := TX3DJSONLD.Create;
+  loader := TX3DJSONLD.Create(SceneMain);
   loader.RegisterJSON;
   SceneMain.Load('castle-data:/x3dj/AllenDutton.x3dj');
   { SaveNode(SceneMain.RootNode, 'outputFromX3d_with_optional_j.x3d'); }

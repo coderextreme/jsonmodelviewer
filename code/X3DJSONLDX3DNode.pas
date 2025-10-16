@@ -778,7 +778,9 @@ begin
   x3dObj := TJSONObject(jsobj.Find('X3D'));
   if Assigned(x3dObj) then begin
     child := ConvertJsonObject(x3dObj, '-', Result);
-    AddChild(Result, child);
+    if child <> Result then begin
+    	AddChild(Result, child);
+    end;
    end;
 end;
 
