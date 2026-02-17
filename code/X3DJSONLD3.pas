@@ -43,8 +43,10 @@ uses
   CastleRenderOptions, X3DFields;
 
 type
+  TX3DStatementClass = class of TX3DFileItem;
   ProtoDictionary = {$ifdef FPC}specialize{$endif} TDictionary<String, TJSONObject>;
   X3DNodeDictionary = {$ifdef FPC}specialize{$endif} TDictionary<String, TX3DNodeClass>;
+  X3DPersistentDictionary = {$ifdef FPC}specialize{$endif} TDictionary<String, TX3DStatementClass>;
   X3DFieldDictionary = {$ifdef FPC}specialize{$endif} TDictionary<String, TX3DFieldClass>;
 
 type
@@ -100,6 +102,7 @@ type
     class var localJSON: TX3DJSONLD;
     class var fieldFactoryMap: X3DFieldDictionary;
     class var nodeFactoryMap: X3DNodeDictionary;
+    class var persistentFactoryMap: X3DPersistentDictionary;
     constructor Create(SceneMain: TCastleScene);
     destructor Destroy; override;
     procedure RegisterJSON;
@@ -128,6 +131,7 @@ begin
   builtins.Sorted := True;
   builtins.Duplicates := dupIgnore;
   nodeFactoryMap := X3DNodeDictionary.Create; 
+  persistentFactoryMap := X3DPersistentDictionary.Create; 
   fieldFactoryMap := X3DFieldDictionary.Create; 
   Factory;
   InitializeBuiltins;
@@ -881,21 +885,21 @@ begin
     try
       Result := nil;
       if (element = nil) then begin
-	CastleLog.WriteLnLog('ERROR', 'Element is nil for %s', [ key ]);
+	CastleLog.WriteLnLog('ERROR', 'Node is nil for %s', [ key ]);
 	Exit;
       end;
       if not Assigned(element) then begin
-	CastleLog.WriteLnLog('ERROR', 'Element is not assigned for %s', [ key ]);
+	CastleLog.WriteLnLog('ERROR', 'Node is not assigned for %s', [ key ]);
 	Exit;
       end;
       if not (element is TX3DNode) then begin
-	CastleLog.WriteLnLog('ERROR', 'Element is not TX3DNode for %s', [ key ]);
+	CastleLog.WriteLnLog('ERROR', 'Node is not TX3DNode for %s', [ key ]);
 	Exit;
       end;
       CastleLog.WriteLnLog('DEBUG', 'class %s %s, field %s', [ element.X3DType, element.ClassName, key ]);
       Result := element.Field(key, false);
       if (Result = nil) then begin
-	CastleLog.WriteLnLog('ERROR', 'Did not find key %s in class', [ key, element.ClassName ]);
+	CastleLog.WriteLnLog('ERROR', 'Did not find key %s in class %s', [ key, element.ClassName ]);
       end else begin
 	CastleLog.WriteLnLog('SUCCESS', 'Found field %s of class %s', [ key, Result.ClassName ]);
       end
@@ -1266,7 +1270,7 @@ begin
   if (element = nil) and not Assigned(element) then begin
     CastleLog.WriteLnLog('ERROR', 'element is nil in SetField');
   end else if (field = nil) and not Assigned(field) then begin
-    CastleLog.WriteLnLog('ERROR', 'field is nil in SetField');
+    CastleLog.WriteLnLog('ERROR', 'field is nil in SetField '+element.ClassX3DType+'.'+key+'='+value.AsString);
   end else if value is TJSONArray then begin
     ConvertJsonArray(root, TJSONArray(value), keyCopy, element, '')
   end else if (field is TSFInt32) and (value is TJSONIntegerNumber) then begin
@@ -1286,7 +1290,8 @@ end;
 
 function TX3DJSONLD.DocumentCreateElement(const key: String): TX3DNode;
 var
-  clz: TX3DNodeClass;
+  cln: TX3DNodeClass;
+  cls: TX3DStatementClass;
 	{
   clz: TPersistentClass;
   obj: TX3DNode;
@@ -1295,15 +1300,22 @@ var
 begin
   x3dname := key;
   CastleLog.WriteLnLog('REFLECT', 'look up Class for '+x3dname);
-  { clz := NodesManager.X3DTypeToClass(x3dname, X3DVersion); }
   try
-    clz := nodeFactoryMap[x3dname];
-    CastleLog.WriteLnLog('REFLECT', 'found Class for '+clz.ClassX3DType);
-    if Assigned(clz) then begin
-      Result := clz.Create;
-      CastleLog.WriteLnLog('DEBUG', 'Created Element for '+x3dname+' type '+Result.X3DType+' class '+Result.ClassName);
+    cln := NodesManager.X3DTypeToClass(x3dname, X3DVersion);
+    if (cln = nil) then begin
+      cls := persistentFactoryMap[x3dname];
+      CastleLog.WriteLnLog('REFLECT', 'found Statement for '+x3dname);
     end else begin
-      CastleLog.WriteLnLog('ERROR', 'Could not find Element for strange class variable clz');
+      CastleLog.WriteLnLog('REFLECT', 'found Node for '+x3dname);
+    end;
+    if Assigned(cln) then begin
+      Result := cln.Create;
+      CastleLog.WriteLnLog('DEBUG', 'Created node for '+x3dname+' type '+Result.X3DType+' class '+Result.ClassName);
+    end else if Assigned(cls) then begin
+      Result := nil; { cls.Create; }
+      CastleLog.WriteLnLog('DEBUG', 'Did not create node for '+x3dname+' class '+cls.ClassName);
+    end else begin
+      CastleLog.WriteLnLog('ERROR', 'Could not find node for strange class variable name'+x3dname);
       Result := nil;
     end;
   except
@@ -1565,7 +1577,11 @@ begin
     end else if jsonValue is TJSONArray then
       ConvertJsonArray(root, TJSONArray(jsonValue), key, child, containerField)
     else if jsonValue is TJSONNumber then
-      Self.SetField(root, child, Copy(key, 2, Length(key)-1), jsonValue)
+      if (key[1] = '@') then begin
+      	Self.SetField(root, child, Copy(key, 2, Length(key)-1), jsonValue)
+      end else begin
+      	Self.SetField(root, child, Copy(key, 1, Length(key)), jsonValue)
+      end
     else if jsonValue is TJSONString then begin
       if key = '#comment' then
       begin
@@ -1575,8 +1591,11 @@ begin
       else if (key = '@type') and (parentkey = 'NavigationInfo') then
         Self.SetField(root, child, Copy(key, 2, Length(key)-1), 
           NavigationInfoTypeToAttributeValue(jsonValue.AsString))
-      else
+      else if (key[1] = '@') then begin
         Self.SetField(root, child, Copy(key, 2, Length(key)-1), jsonValue);
+      end else begin
+        Self.SetField(root, child, Copy(key, 1, Length(key)), jsonValue);
+      end
     end else if (jsonValue is TJSONBoolean) then begin
       Self.SetField(root, child, Copy(key, 2, Length(key)-1), jsonValue);
     end else if (jsonValue is TJSONNull) then begin
@@ -2148,23 +2167,23 @@ begin
   { nodeFactoryMap.Add('DiffuseTransmissionMaterialExtension', TDiffuseTransmissionMaterialExtensionNode); }
   
   // X3D statements
-  nodeFactoryMap.Add('component', TGroupNode);
-  nodeFactoryMap.Add('connect', TGroupNode);
-  nodeFactoryMap.Add('EXPORT', TGroupNode);
-  nodeFactoryMap.Add('ExternProtoDeclare', TGroupNode);
-  nodeFactoryMap.Add('field', TGroupNode);
-  nodeFactoryMap.Add('fieldValue', TGroupNode);
-  nodeFactoryMap.Add('head', TGroupNode);
-  nodeFactoryMap.Add('IMPORT', TGroupNode);
-  nodeFactoryMap.Add('IS', TGroupNode);
-  nodeFactoryMap.Add('meta', TGroupNode);
-  nodeFactoryMap.Add('ProtoBody', TGroupNode);
-  nodeFactoryMap.Add('ProtoDeclare', TGroupNode);
-  nodeFactoryMap.Add('ProtoInterface', TGroupNode);
-  nodeFactoryMap.Add('ROUTE', TGroupNode);
-  nodeFactoryMap.Add('Scene', TGroupNode);
-  nodeFactoryMap.Add('unit', TGroupNode);
-  nodeFactoryMap.Add('X3D', TGroupNode);
+  persistentFactoryMap.Add('component', nil);
+  persistentFactoryMap.Add('connect', nil);
+  persistentFactoryMap.Add('EXPORT', TX3DExport);
+  persistentFactoryMap.Add('ExternProtoDeclare', nil);
+  persistentFactoryMap.Add('field', nil);
+  persistentFactoryMap.Add('fieldValue', nil);
+  persistentFactoryMap.Add('head', nil);
+  persistentFactoryMap.Add('IMPORT', TX3DImport);
+  persistentFactoryMap.Add('IS', nil);
+  persistentFactoryMap.Add('meta', nil);
+  persistentFactoryMap.Add('ProtoBody', nil);
+  persistentFactoryMap.Add('ProtoDeclare', nil);
+  persistentFactoryMap.Add('ProtoInterface', nil);
+  persistentFactoryMap.Add('ROUTE', nil);
+  persistentFactoryMap.Add('Scene', nil);
+  persistentFactoryMap.Add('unit', nil);
+  persistentFactoryMap.Add('X3D', TX3DRootNode);
   
   // X3D field types
   fieldFactoryMap.Add('SFBool', TSFBool);

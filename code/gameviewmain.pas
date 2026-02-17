@@ -79,7 +79,7 @@ begin
   loader := TX3DJSONLD.Create(SceneMain);
   loader.RegisterJSON;
   SceneMain.Load('castle-data:/x3dj/AllenDutton.x3dj');
-  { SaveNode(SceneMain.RootNode, 'outputFromX3d_with_optional_j.x3d'); }
+  SaveNode(SceneMain.RootNode, 'sampleOutputFromModelViewer3.x3d');
 
 end;
 
